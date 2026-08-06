@@ -8,10 +8,10 @@ export async function POST(req: NextRequest) {
     const decoded = verifyToken(token!) as { id: number } | null;
     if (!decoded) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { planId, phone, method } = await req.json();
+    const { planId, phone, method, transactionId, screenshotUrl, notes } = await req.json();
 
-    if (!planId || !phone) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    if (!planId || !phone || !transactionId) {
+      return NextResponse.json({ error: 'Phone number and Transaction ID are required' }, { status: 400 });
     }
 
     const planResult = await sql`SELECT * FROM plans WHERE id = ${planId}`;
@@ -22,8 +22,10 @@ export async function POST(req: NextRequest) {
     const plan = planResult[0];
 
     await sql`
-      INSERT INTO deposit_requests (user_id, plan_id, amount_rs, user_phone, status)
-      VALUES (${decoded.id}, ${planId}, ${plan.price_rs}, ${phone}, 'pending')
+      INSERT INTO deposit_requests 
+        (user_id, plan_id, amount_rs, user_phone, method, transaction_id, screenshot_url, notes, status)
+      VALUES 
+        (${decoded.id}, ${planId}, ${plan.price_rs}, ${phone}, ${method}, ${transactionId}, ${screenshotUrl ?? null}, ${notes ?? null}, 'pending')
     `;
 
     return NextResponse.json({ success: true });

@@ -10,9 +10,8 @@ export async function POST(req: NextRequest) {
 
     const { userPlanId } = await req.json();
 
-    // Get the plan and verify ownership
     const planResult = await sql`
-      SELECT up.*, p.daily_diamonds
+      SELECT up.*, p.daily_cash
       FROM user_plans up
       JOIN plans p ON up.plan_id = p.id
       WHERE up.id = ${userPlanId} AND up.user_id = ${decoded.id} AND up.status = 'active'
@@ -24,7 +23,6 @@ export async function POST(req: NextRequest) {
 
     const plan = planResult[0];
 
-    // Check 24hr cooldown
     if (plan.last_collected_at) {
       const diff = Date.now() - new Date(plan.last_collected_at).getTime();
       if (diff < 24 * 60 * 60 * 1000) {
@@ -32,25 +30,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const diamonds = plan.daily_diamonds;
+    const dailyCash = parseFloat(plan.daily_cash);
 
-    // Update plan last_collected_at
     await sql`
       UPDATE user_plans SET last_collected_at = NOW() WHERE id = ${userPlanId}
     `;
 
-    // Add diamonds to user balance
     await sql`
-      UPDATE users SET diamond_balance = diamond_balance + ${diamonds} WHERE id = ${decoded.id}
+      UPDATE users SET cash_balance = cash_balance + ${dailyCash} WHERE id = ${decoded.id}
     `;
 
-    // Log the collection
     await sql`
       INSERT INTO diamond_collections (user_id, user_plan_id, diamonds_earned)
-      VALUES (${decoded.id}, ${userPlanId}, ${diamonds})
+      VALUES (${decoded.id}, ${userPlanId}, ${dailyCash})
     `;
 
-    return NextResponse.json({ success: true, diamonds });
+    return NextResponse.json({ success: true, cash: dailyCash });
   } catch (err) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }

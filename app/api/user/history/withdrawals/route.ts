@@ -8,21 +8,15 @@ export async function GET(req: NextRequest) {
     const decoded = verifyToken(token!) as { id: number } | null;
     if (!decoded) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const plans = await sql`
-      SELECT 
-        up.id,
-        p.name as plan_name,
-        p.daily_cash,
-        up.expires_at,
-        up.last_collected_at,
-        up.status
-      FROM user_plans up
-      JOIN plans p ON up.plan_id = p.id
-      WHERE up.user_id = ${decoded.id} AND up.status = 'active'
-      ORDER BY up.created_at DESC
+    const withdrawals = await sql`
+      SELECT id, diamonds_spent, amount_rs, status, method, requested_at, paid_at
+      FROM withdrawal_requests
+      WHERE user_id = ${decoded.id}
+      ORDER BY requested_at DESC
+      LIMIT 50
     `;
 
-    return NextResponse.json({ plans });
+    return NextResponse.json({ withdrawals });
   } catch (err) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }

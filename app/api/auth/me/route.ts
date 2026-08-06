@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     if (!decoded) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const result = await sql`
-      SELECT id, name, email, phone, jazzcash_number, diamond_balance, created_at
+      SELECT id, name, email, phone, jazzcash_number, cash_balance, created_at
       FROM users WHERE id = ${decoded.id}
     `;
 

@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +25,6 @@ export default function RegisterPage() {
 
     const data = await res.json();
     setLoading(false);
-
     if (!res.ok) return setError(data.error);
     router.push('/dashboard');
   }
@@ -51,7 +52,7 @@ export default function RegisterPage() {
               placeholder="Ahmed Raza"
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-violet-500 transition-colors"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
               required
             />
           </div>
@@ -63,36 +64,43 @@ export default function RegisterPage() {
               placeholder="you@example.com"
               value={form.email}
               onChange={e => setForm({ ...form, email: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-violet-500 transition-colors"
+              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
               required
             />
           </div>
 
           <div>
             <label className="text-sm text-gray-400 mb-1 block">Password</label>
-            <input
-              type="password"
-              placeholder="Min 6 characters"
-              value={form.password}
-              onChange={e => setForm({ ...form, password: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-violet-500 transition-colors"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Min 6 characters"
+                value={form.password}
+                onChange={e => setForm({ ...form, password: e.target.value })}
+                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors"
+            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all"
           >
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
 
           <p className="text-center text-sm text-gray-500">
             Already have an account?{' '}
-            <Link href="/login" className="text-violet-400 hover:underline">
-              Login
-            </Link>
+            <Link href="/login" className="text-amber-400 hover:underline">Login</Link>
           </p>
         </form>
       </div>

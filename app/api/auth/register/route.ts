@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sql from '@/lib/db';
-import { hashPassword, signToken } from '@/lib/auth';
+import { hashPassword, signToken, generateReferralCode } from '@/lib/auth';
+import { payReferralBonus } from '@/lib/referral';
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, referralCode } = await req.json();
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
@@ -19,14 +20,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 400 });
     }
 
+    // Check referral code
+    let referrerId: number | null = null;
+    if (referralCode) {
+      const referrer = await sql`
+        SELECT id FROM users WHERE referral_code = ${referralCode.toUpperCase()}
+      `;
+      if (referrer.length > 0) {
+        referrerId = referrer[0].id;
+      }
+    }
+
     const password_hash = await hashPassword(password);
+    const newReferralCode = generateReferralCode();
+
     const result = await sql`
-      INSERT INTO users (name, email, password_hash)
-      VALUES (${name}, ${email}, ${password_hash})
+      INSERT INTO users (name, email, password_hash, referral_code, referred_by)
+      VALUES (${name}, ${email}, ${password_hash}, ${newReferralCode}, ${referrerId})
       RETURNING id, name, email
     `;
 
     const user = result[0];
+
+    // Pay signup bonus to referrer
+    if (referrerId) {
+      await payReferralBonus(referrerId, user.id, 'signup');
+    }
+
     const token = signToken({ id: user.id, email: user.email, role: 'user' });
 
     const response = NextResponse.json({ success: true, user });

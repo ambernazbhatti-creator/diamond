@@ -37,7 +37,6 @@ export async function POST(req: NextRequest) {
     const { depositId, action } = await req.json();
 
     if (action === 'confirm') {
-      // Get deposit info
       const depResult = await sql`SELECT * FROM deposit_requests WHERE id = ${depositId}`;
       if (depResult.length === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 });
       const dep = depResult[0];
@@ -46,23 +45,37 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Already processed' }, { status: 400 });
       }
 
-      // Confirm deposit
-      await sql`
-        UPDATE deposit_requests SET status = 'confirmed', confirmed_at = NOW() WHERE id = ${depositId}
-      `;
+      const planResult = await sql`SELECT * FROM plans WHERE id = ${dep.plan_id}`;
+      if (planResult.length === 0) return NextResponse.json({ error: 'Plan not found' }, { status: 404 });
+      const plan = planResult[0];
 
-      // Activate user plan
-      await sql`
-        INSERT INTO user_plans (user_id, plan_id, started_at, expires_at, status)
-        VALUES (
-          ${dep.user_id},
-          ${dep.plan_id},
-          NOW(),
-          NOW() + INTERVAL '30 days',
-          'active'
-        )
-      `;
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + plan.duration_days);
 
+      await sql`
+    UPDATE deposit_requests 
+    SET status = 'confirmed', confirmed_at = NOW() 
+    WHERE id = ${depositId}
+  `;
+
+      await sql`
+    INSERT INTO user_plans (user_id, plan_id, started_at, expires_at, status)
+    VALUES (
+      ${dep.user_id},
+      ${dep.plan_id},
+      NOW(),
+      ${expiresAt.toISOString()},
+      'active'
+    )
+  `;
+
+      // Pay plan purchase bonus to referrer if user was referred
+      const userResult = await sql`SELECT referred_by FROM users WHERE id = ${dep.user_id}`;
+      const user = userResult[0];
+      if (user?.referred_by) {
+        const { payReferralBonus } = await import('@/lib/referral');
+        await payReferralBonus(user.referred_by, dep.user_id, 'plan_purchase');
+      }
     } else if (action === 'reject') {
       await sql`
         UPDATE deposit_requests SET status = 'rejected' WHERE id = ${depositId}

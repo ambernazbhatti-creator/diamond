@@ -1,16 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const searchParams = useSearchParams();
+  const [form, setForm] = useState({ name: '', email: '', password: '', referralCode: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) setForm(f => ({ ...f, referralCode: ref.toUpperCase() }));
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,54 +36,61 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gray-950">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-[#0a0a0a]">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl mb-2">💎</h1>
           <h2 className="text-2xl font-bold text-white">Create Account</h2>
-          <p className="text-gray-400 mt-1 text-sm">Start earning diamonds today</p>
+          <p className="text-gray-400 mt-1 text-sm">Start earning cash today</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-gray-900 rounded-2xl p-6 space-y-4 border border-gray-800">
+        <form onSubmit={handleSubmit} className="bg-white/3 rounded-2xl p-6 space-y-4 border border-white/8">
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3">
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3">
               {error}
             </div>
           )}
 
+          {form.referralCode && (
+            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm rounded-xl px-4 py-3 flex items-center gap-2">
+              <span>🎯</span>
+              <span>Referral code applied: <strong>{form.referralCode}</strong></span>
+            </div>
+          )}
+
           <div>
-            <label className="text-sm text-gray-400 mb-1 block">Full Name</label>
+            <label className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-1.5 block">Full Name</label>
             <input
               type="text"
-              placeholder="Ahmed Raza"
+              placeholder="Your name"
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
+              className="w-full bg-white/3 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors text-sm"
               required
             />
           </div>
 
           <div>
-            <label className="text-sm text-gray-400 mb-1 block">Email</label>
+            <label className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-1.5 block">Email</label>
             <input
               type="email"
               placeholder="you@example.com"
               value={form.email}
               onChange={e => setForm({ ...form, email: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
+              className="w-full bg-white/3 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors text-sm"
               required
             />
           </div>
 
           <div>
-            <label className="text-sm text-gray-400 mb-1 block">Password</label>
+            <label className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-1.5 block">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Min 6 characters"
                 value={form.password}
                 onChange={e => setForm({ ...form, password: e.target.value })}
-                className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-amber-500 transition-colors"
+                className="w-full bg-white/3 border border-white/8 rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors text-sm"
                 required
               />
               <button
@@ -90,10 +103,23 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          <div>
+            <label className="text-xs text-gray-400 uppercase tracking-wider font-medium mb-1.5 block">
+              Referral Code <span className="text-gray-600 normal-case">(optional)</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Enter referral code"
+              value={form.referralCode}
+              onChange={e => setForm({ ...form, referralCode: e.target.value.toUpperCase() })}
+              className="w-full bg-white/3 border border-white/8 rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-amber-500/50 transition-colors text-sm font-mono tracking-wider"
+            />
+          </div>
+
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all"
+            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold py-3 rounded-xl transition-all shadow-lg shadow-amber-500/20 text-sm"
           >
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
@@ -105,5 +131,13 @@ export default function RegisterPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterForm />
+    </Suspense>
   );
 }

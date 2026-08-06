@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Package, ArrowDownCircle, Clock, LogOut } from 'lucide-react';
+import { Home, Package, ArrowDownCircle, Clock, LogOut, Users} from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Home', icon: Home },
   { href: '/packages', label: 'Packages', icon: Package },
+  { href: '/referral', label: 'Team', icon: Users },
   { href: '/withdraw', label: 'Withdraw', icon: ArrowDownCircle },
   { href: '/history', label: 'History', icon: Clock },
 ];

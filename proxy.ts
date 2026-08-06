@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 
-const protectedRoutes = ['/dashboard', '/packages', '/withdraw', '/history'];
+const protectedRoutes = ['/dashboard', '/packages', '/withdraw', '/history', '/referral'];
 const adminRoutes = ['/admin'];
 const authRoutes = ['/login', '/register'];
 

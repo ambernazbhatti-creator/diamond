@@ -20,15 +20,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Minimum withdrawal is Rs. 100' }, { status: 400 });
     }
 
-    const userResult = await sql`SELECT cash_balance FROM users WHERE id = ${decoded.id}`;
+    const userResult = await sql`
+      SELECT cash_balance, withdrawal_unlocks, withdrawals_used 
+      FROM users WHERE id = ${decoded.id}
+    `;
     const user = userResult[0];
 
     if (parseFloat(user.cash_balance) < amountNum) {
       return NextResponse.json({ error: 'Insufficient balance' }, { status: 400 });
     }
 
+    // Check withdrawal unlock status
+    const availableWithdrawals = user.withdrawal_unlocks - user.withdrawals_used;
+    if (availableWithdrawals <= 0) {
+      return NextResponse.json({
+        error: 'UNLOCK_REQUIRED',
+        message: 'You need to refer a friend who buys any plan to unlock withdrawals.',
+      }, { status: 403 });
+    }
+
     await sql`
-      UPDATE users SET cash_balance = cash_balance - ${amountNum} WHERE id = ${decoded.id}
+      UPDATE users 
+      SET cash_balance = cash_balance - ${amountNum},
+          withdrawals_used = withdrawals_used + 1
+      WHERE id = ${decoded.id}
     `;
 
     await sql`

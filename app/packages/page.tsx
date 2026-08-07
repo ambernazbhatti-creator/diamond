@@ -204,20 +204,23 @@ export default function PackagesPage() {
 
         {/* Modal */}
         {selected && (
-          <div className="fixed inset-0 bg-black/90 z-50 flex items-end md:items-center justify-center px-4 pb-0 md:pb-4">
-            <div className="bg-[#111] border border-white/10 rounded-t-3xl md:rounded-2xl w-full max-w-md max-h-[92vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/90 z-50 flex items-end md:items-center justify-center px-0 md:px-4 pb-0 md:pb-4">
+            <div className="bg-[#111] border border-white/10 rounded-t-3xl md:rounded-2xl w-full max-w-md h-[92vh] md:max-h-[85vh] md:h-auto overflow-y-auto overscroll-contain">
 
               <div className="sticky top-0 bg-[#111] border-b border-white/8 px-5 py-4 rounded-t-3xl md:rounded-t-2xl flex items-center justify-between">
                 <div>
                   <p className="text-white font-bold">{selected.name} Plan</p>
                   <p className="text-gray-500 text-xs">Rs. {selected.price_rs} · {selected.duration_days} days</p>
                 </div>
-                <button
-                  onClick={handleClose}
-                  className="w-8 h-8 bg-white/5 hover:bg-white/10 rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors"
-                >
-                  <X size={16} />
-                </button>
+                <div className="pb-6">
+                  <button
+                    onClick={handleSubmit}
+                    disabled={loading}
+                    className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-amber-500/20 text-sm"
+                  >
+                    {uploading ? '📤 Uploading screenshot...' : loading ? 'Submitting...' : 'Submit Deposit Request'}
+                  </button>
+                </div>
               </div>
 
               <div className="p-5 space-y-6">
@@ -231,10 +234,10 @@ export default function PackagesPage() {
                         key={m}
                         onClick={() => setMethod(m)}
                         className={`py-3 rounded-xl text-sm font-semibold border transition-all ${method === m
-                            ? m === 'jazzcash'
-                              ? 'bg-red-500/15 border-red-500/40 text-red-400'
-                              : 'bg-green-500/15 border-green-500/40 text-green-400'
-                            : 'bg-white/3 border-white/8 text-gray-400 hover:text-white'
+                          ? m === 'jazzcash'
+                            ? 'bg-red-500/15 border-red-500/40 text-red-400'
+                            : 'bg-green-500/15 border-green-500/40 text-green-400'
+                          : 'bg-white/3 border-white/8 text-gray-400 hover:text-white'
                           }`}
                       >
                         {m === 'jazzcash' ? 'JazzCash' : 'Easypaisa'}

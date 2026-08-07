@@ -21,7 +21,6 @@ export async function payReferralBonus(
   const teamSize = await getTeamSize(referrerId);
   const amount = getBonusAmount(teamSize);
 
-  // Add to referrer's cash balance and referral earnings
   await sql`
     UPDATE users 
     SET cash_balance = cash_balance + ${amount},
@@ -29,11 +28,17 @@ export async function payReferralBonus(
     WHERE id = ${referrerId}
   `;
 
-  // Log the bonus
   await sql`
     INSERT INTO referral_bonuses (referrer_id, referred_id, bonus_type, amount_rs, team_size_at_time)
     VALUES (${referrerId}, ${referredId}, ${bonusType}, ${amount}, ${teamSize})
   `;
+
+  // When a referred user buys a plan, give referrer 10 withdrawal unlocks
+  if (bonusType === 'plan_purchase') {
+    await sql`
+      UPDATE users SET withdrawal_unlocks = withdrawal_unlocks + 10 WHERE id = ${referrerId}
+    `;
+  }
 
   return amount;
 }
